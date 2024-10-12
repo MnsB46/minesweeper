@@ -17,37 +17,39 @@ def randomMinePlacer(dict1):###Changes the value of each key to randomly be true
     for e in dict1:
         dict1[e] = random.choices([True, False], weights=[20, 80], k=1)[0]
 
-def nonRandomMinePlacer(dict1, tup):
-    dict1[tup] = 0
-    list1 = [(tup[0]-1, tup[1]-1), (tup[0], tup[1]-1), (tup[0]+1, tup[1]-1), (tup[0]+1, tup[1]), (tup[0]+1, tup[1]+1), (tup[0], tup[1]+1), (tup[0]-1, tup[1]+1), (tup[0]-1, tup[1])]
+def nonRandomMinePlacer(tup):
+    list1 = [tup, (tup[0]-1, tup[1]-1), (tup[0], tup[1]-1), (tup[0]+1, tup[1]-1), (tup[0]+1, tup[1]), (tup[0]+1, tup[1]+1), (tup[0], tup[1]+1), (tup[0]-1, tup[1]+1), (tup[0]-1, tup[1])]
     for e in list1:
-        dict1[e] = 0
+        if e in mines:
+            mines[e] = False
+            fog[e] = 1
     for e in squares:
         if e in list1:
             print()
         else:
-            dict1[e] = random.choices([True, False], weights=[20, 80], k=1)[0]
+            mines[e] = random.choices([True, False], weights=[20, 80], k=1)[0]
+    
 
-def adjacentCounter(dict1, dict2):###Changes the value of each key to how many adjacent bombs there are.
-    for e in dict1:
+def adjacentCounter():###Changes the value of each key to how many adjacent bombs there are.
+    for e in mines:
         list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
         for f in list1:
-            if f in dict1:
-                if dict1[f] == True:
-                    dict2[e] += 1
+            if f in mines:
+                if mines[f] == True:
+                    adjacentMines[e] += 1
 
-def adjacentFogCounter(dict1, dict2):###Changes the value of each key to how many adjacent bombs there are.
-    for e in dict1:
+def adjacentFogCounter():###Changes the value of each key to how many adjacent bombs there are.
+    for e in fog:
         list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
         for f in list1:
-            if f in dict1:
-                if dict1[f] == 0 or dict1[f] == 2:
-                    dict2[e] += 1
+            if f in fog:
+                if fog[f] == 0 or fog[f] == 2:
+                    adjacentFog[e] += 1
                     
-def draw_squares(list1, adjacentMines):###Draws the squares
+def draw_squares():###Draws the squares
     global gameOver
     for i in range(rows):
-        for e in list1[i*columns:i*columns+columns]:
+        for e in squares[i*columns:i*columns+columns]:
             if fog[e] == 1:
                 if mines[e] == True:
                     print("|*", end="")
@@ -94,29 +96,40 @@ def placeBombMarks(e):
                     fog[f] = 1
     
 
-squares = cartesian_product(rows, columns) #list containing the coordinates of all squares
+squares = cartesian_product(rows, columns)
 mines = {key: None for key in squares} #dictionary containing if a squares is a bomb or not
 adjacentMines = {key: 0 for key in squares} #dictionary containing how many adjacent bombs there is to a squares
 fog = {key: 0 for key in squares} #dictionary containing if a square is hidden, shown or has a bomb mark
 adjacentFog = {key: 0 for key in squares} #dictionary containing how many adjacent squares are hidden, or has a bomb mark
-randomMinePlacer(mines)
-adjacentCounter(mines, adjacentMines)
-draw_squares(squares, adjacentMines)
+draw_squares()
 
+
+user_input = input() #ask for user input
+user_input = "("+user_input+")" #adds paranthesis to user input
+user_input = ast.literal_eval(user_input) #converts the user input string to a tuplet
+nonRandomMinePlacer(user_input)
+adjacentCounter()
+draw_squares()
+    
 while gameOver == False:
     user_input = input() #ask for user input
     user_input = "("+user_input+")" #adds paranthesis to user input
     user_input = ast.literal_eval(user_input) #converts the user input string to a tuplet
-    fog[user_input] = 1 #changes the square to shown
-    adjacentFog = {key: 0 for key in adjacentFog}
-    adjacentFogCounter(fog, adjacentFog)
-    #print(adjacentFog)
     
-    placeBombMarks(user_input)
-    #Should show hidden squares if they are known to be safe
-    #ie there are as many bomb marks as there are adjacent mines
-    
-    draw_squares(squares, adjacentMines) #draws the squares showing the newly revealed squares
+    fog[user_input] = 1
+    draw_squares()
     
 
 
+#Draw a completly hidden minefield
+#Ask for user input
+#Make sure that the user input square and the adjacent squares are not bombs
+#Place the other bombs randomly
+#Count adjacent bombs for all squares
+#Make the user input square and the adjacent squares shown
+#Draw the minefield
+#Check if there are any squares with 0 adjacent bombs
+#Place bomb markers if possible
+#Check for next user input
+#Change the user input square to shown
+#If it is a bomb you lose
