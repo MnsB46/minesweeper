@@ -3,8 +3,8 @@ import itertools
 import ast
 
 squares = []
-rows = 6
-columns = 6
+rows = 10
+columns = 10
 gameOver = False
 
 def cartesian_product(r, c):###Returns a list containing the tuplets (1,1), (1,2), ... (1,2), (2, 2), ... (r,c)
@@ -32,6 +32,7 @@ def nonRandomMinePlacer(tup):
 
 def adjacentCounter():###Changes the value of each key to how many adjacent bombs there are.
     for e in mines:
+        adjacentMines[e] = 0
         list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
         for f in list1:
             if f in mines:
@@ -40,11 +41,21 @@ def adjacentCounter():###Changes the value of each key to how many adjacent bomb
 
 def adjacentFogCounter():###Changes the value of each key to how many adjacent bombs there are.
     for e in fog:
+        adjacentFog[e] = 0
         list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
         for f in list1:
             if f in fog:
                 if fog[f] == 0 or fog[f] == 2:
                     adjacentFog[e] += 1
+
+def adjacentBombMarkCounter():
+    for e in fog:
+        adjacentBombMarks[e] = 0
+        list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
+        for f in list1:
+            if f in fog:
+                if fog[f] == 2:
+                    adjacentBombMarks[e] += 1
                     
 def draw_squares():###Draws the squares
     global gameOver
@@ -56,10 +67,10 @@ def draw_squares():###Draws the squares
                     gameOver = True
                 else:
                     print("|"+str(adjacentMines[e]), end="")
-            elif fog[e] == 2:
-                print("|?", end="")
-            else:
+            elif fog[e] == 0:
                 print("| ", end="")
+            else:
+                print("|?", end="")
         print()
     if gameOver == True:
         print("BOOM")
@@ -79,21 +90,30 @@ def checkWinCondition(dict1):
     else:
         return False
 
-def placeBombMarks(e):
-    global fog
-    if adjacentMines[e] != 0:
-        if adjacentFog[e] == adjacentMines[e]:
+def placeBombMarks():
+    for e in squares:
+        if adjacentMines[e] != 0:
+            if adjacentFog[e] == adjacentMines[e]:
+                list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
+                for f in list1:
+                    if f in squares:
+                        if fog[f] == 0:
+                            fog[f] = 2
+
+def showAdjacentSquares():
+    for e in squares:
+        if adjacentMines[e] == 0 and fog[e] == 1:
             list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
-            for f in list1:
-                if f in squares:
-                    if fog[f] == 0:
-                        fog[f] = 2
-    else:
-        list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
-        for f in list1:
-            if f in squares:
-                if fog[f] == 0:
-                    fog[f] = 1
+            for i in list1:
+                if i in squares:
+                    fog[i] = 1
+        if adjacentMines[e] == adjacentBombMarks[e] and fog[e] == 1 and adjacentMines[e] != 0:
+            list1 = [(e[0]-1, e[1]-1), (e[0], e[1]-1), (e[0]+1, e[1]-1), (e[0]+1, e[1]), (e[0]+1, e[1]+1), (e[0], e[1]+1), (e[0]-1, e[1]+1), (e[0]-1, e[1])]
+            for i in list1:
+                if i in squares and fog[i] != 2:
+                    fog[i] = 1
+            
+            
     
 
 squares = cartesian_product(rows, columns)
@@ -101,6 +121,7 @@ mines = {key: None for key in squares} #dictionary containing if a squares is a 
 adjacentMines = {key: 0 for key in squares} #dictionary containing how many adjacent bombs there is to a squares
 fog = {key: 0 for key in squares} #dictionary containing if a square is hidden, shown or has a bomb mark
 adjacentFog = {key: 0 for key in squares} #dictionary containing how many adjacent squares are hidden, or has a bomb mark
+adjacentBombMarks = {key: 0 for key in squares}
 draw_squares()
 
 
@@ -113,23 +134,15 @@ draw_squares()
     
 while gameOver == False:
     user_input = input() #ask for user input
-    user_input = "("+user_input+")" #adds paranthesis to user input
-    user_input = ast.literal_eval(user_input) #converts the user input string to a tuplet
+    if user_input == "show":
+        adjacentBombMarkCounter()
+        showAdjacentSquares()
+    elif user_input == "bomb":
+        adjacentFogCounter()
+        placeBombMarks()
+    else:
+        user_input = "("+user_input+")" #adds paranthesis to user input
+        user_input = ast.literal_eval(user_input) #converts the user input string to a tuplet
+        fog[user_input] = 1
     
-    fog[user_input] = 1
     draw_squares()
-    
-
-
-#Draw a completly hidden minefield
-#Ask for user input
-#Make sure that the user input square and the adjacent squares are not bombs
-#Place the other bombs randomly
-#Count adjacent bombs for all squares
-#Make the user input square and the adjacent squares shown
-#Draw the minefield
-#Check if there are any squares with 0 adjacent bombs
-#Place bomb markers if possible
-#Check for next user input
-#Change the user input square to shown
-#If it is a bomb you lose
