@@ -3,8 +3,8 @@ import itertools
 import ast
 
 squares = []
-rows = 10
-columns = 10
+rows = 5
+columns = 5
 gameOver = False
 
 def cartesian_product(r, c):###Returns a list containing the tuplets (1,1), (1,2), ... (1,2), (2, 2), ... (r,c)
@@ -15,7 +15,7 @@ def cartesian_product(r, c):###Returns a list containing the tuplets (1,1), (1,2
 
 def randomMinePlacer(dict1):###Changes the value of each key to randomly be true or false
     for e in dict1:
-        dict1[e] = random.choices([True, False], weights=[20, 80], k=1)[0]
+        dict1[e] = random.choices([True, False], weights=[30, 70], k=1)[0]
 
 def nonRandomMinePlacer(tup):
     list1 = [tup, (tup[0]-1, tup[1]-1), (tup[0], tup[1]-1), (tup[0]+1, tup[1]-1), (tup[0]+1, tup[1]), (tup[0]+1, tup[1]+1), (tup[0], tup[1]+1), (tup[0]-1, tup[1]+1), (tup[0]-1, tup[1])]
@@ -140,6 +140,15 @@ while gameOver == False:
     elif user_input == "bomb":
         adjacentFogCounter()
         placeBombMarks()
+    elif user_input == "bm":
+        print("Where do you want to place a bomb mark?")
+        user_input = input()
+        user_input = "("+user_input+")"
+        user_input = ast.literal_eval(user_input)
+        if fog[user_input] == 0:
+            fog[user_input] = 2
+        elif fog[user_input] == 2:
+            fog[user_input] = 0
     else:
         user_input = "("+user_input+")" #adds paranthesis to user input
         user_input = ast.literal_eval(user_input) #converts the user input string to a tuplet
